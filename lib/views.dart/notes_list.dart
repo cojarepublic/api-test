@@ -7,22 +7,26 @@ final List notes = [
   NoteForListing(
     noteID: '1',
     createDateTime: DateTime.now(),
-    lastEditDateTime: DateTime.now(),
+    latestEditDateTime: DateTime.now(),
     noteTitle: 'Note 1',
   ),
   NoteForListing(
     noteID: '2',
     createDateTime: DateTime.now(),
-    lastEditDateTime: DateTime.now(),
+    latestEditDateTime: DateTime.now(),
     noteTitle: 'Note 2',
   ),
   NoteForListing(
     noteID: '3',
     createDateTime: DateTime.now(),
-    lastEditDateTime: DateTime.now(),
+    latestEditDateTime: DateTime.now(),
     noteTitle: 'Note 3',
   ),
 ];
+
+String formatDateTime (DateTime dateTime) {
+  return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
+}
 
   @override
   Widget build(BuildContext context) {
@@ -38,11 +42,11 @@ final List notes = [
         separatorBuilder: (context, index) => Divider(height: 1, color: Colors.green,),
         itemBuilder: (context, index) {
           return ListTile(
-            title: Text('Hello'),
-            subtitle: Text('Last edited on 9/10/2020'),
+            title: Text(notes[index].noteTitle),
+            subtitle: Text('Last edited on ${formatDateTime(notes[index].latestEditDateTime)}'),
           );
         } ,
-        itemCount: 30,
+        itemCount: notes.length,
       ),
     );
   }
