@@ -1,34 +1,48 @@
+import 'dart:developer';
+
+import 'package:api_test/models/api_response.dart';
 import 'package:api_test/models/note_for_listing.dart';
+import 'package:api_test/services/notes_service.dart';
 import 'package:api_test/views/note_modify.dart';
 import 'package:api_test/views/note_delete.dart';
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 
 import 'note_modify.dart';
 
-class NotesList extends StatelessWidget {
-  final List notes = [
-    NoteForListing(
-      noteID: '1',
-      createDateTime: DateTime.now(),
-      latestEditDateTime: DateTime.now(),
-      noteTitle: 'Note 1',
-    ),
-    NoteForListing(
-      noteID: '2',
-      createDateTime: DateTime.now(),
-      latestEditDateTime: DateTime.now(),
-      noteTitle: 'Note 2',
-    ),
-    NoteForListing(
-      noteID: '3',
-      createDateTime: DateTime.now(),
-      latestEditDateTime: DateTime.now(),
-      noteTitle: 'Note 3',
-    ),
-  ];
+class NotesList extends StatefulWidget {
+
+  @override
+  _NotesListState createState() => _NotesListState();
+}
+
+class _NotesListState extends State<NotesList> {
+  NotesService get service => GetIt.I<NotesService>();
+
+  APIResponse<List<NoteForListing>> _apiResponse;
+  bool _isLoading = false;
 
   String formatDateTime(DateTime dateTime) {
     return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
+  }
+
+  @override
+  void initState() {
+    _fetchNotes();
+    super.initState();
+  }
+
+  _fetchNotes() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    _apiResponse = await service.getNotesList();
+
+
+    setState(() {
+      _isLoading = false;
+    });
   }
 
   @override
@@ -45,14 +59,23 @@ class NotesList extends StatelessWidget {
         },
         child: Icon(Icons.add),
       ),
-      body: ListView.separated(
+      body: Builder(
+        builder: (_) {
+          if (_isLoading) {
+            return CircularProgressIndicator();
+          }
+
+          if (_apiResponse.error) {
+            return Center(child: Text(_apiResponse.errorMessage));
+          }
+          return ListView.separated(
         separatorBuilder: (context, index) => Divider(
           height: 1,
           color: Colors.green,
         ),
         itemBuilder: (context, index) {
           return Dismissible(
-            key: ValueKey(notes[index].noteID),
+            key: ValueKey(_apiResponse.data[index].noteID),
             direction: DismissDirection.startToEnd,
             onDismissed: (direction) {
 
@@ -70,21 +93,23 @@ class NotesList extends StatelessWidget {
 
             ),
                       child: ListTile(
-              title: Text(notes[index].noteTitle),
+              title: Text(_apiResponse.data[index].noteTitle),
               subtitle: Text(
-                  'Last edited on ${formatDateTime(notes[index].latestEditDateTime)}'),
+                  'Last edited on ${formatDateTime(_apiResponse.data[index].latestEditDateTime)}'),
               onTap: () {
                 Navigator.of(context).push(MaterialPageRoute(
                   builder: (context) => NoteModify(
-                    noteID: notes[index].noteID,
+                    noteID: _apiResponse.data[index].noteID,
                   ),
                 ));
               },
             ),
           );
         },
-        itemCount: notes.length,
-      ),
+        itemCount: _apiResponse.data.length,
+      );
+        }
+        )
     );
   }
 }
